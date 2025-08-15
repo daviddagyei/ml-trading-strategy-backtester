@@ -1,0 +1,29 @@
+[global]
+# Set development mode to false for production
+developmentMode = false
+
+[server]
+# Server settings for Streamlit Cloud
+runOnSave = false
+fileWatcherType = "none"
+enableCORS = false
+enableXsrfProtection = true
+
+# Port configuration (Streamlit Cloud will override this)
+port = 8501
+
+[browser]
+# Disable server stats gathering
+gatherUsageStats = false
+
+[theme]
+# Custom theme settings (optional)
+primaryColor = "#1f77b4"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f0f2f6"
+textColor = "#262730"
+
+[client]
+# Show error details in production
+showErrorDetails = false
+toolbarMode = "viewer"

@@ -37,7 +37,19 @@ A comprehensive Streamlit application that implements sophisticated trading stra
 
 ## 🚀 Quick Start
 
-### Option 1: Automated Setup (Recommended)
+### Option 1: Deploy on Streamlit Cloud (Recommended)
+
+1. **Fork this repository** to your GitHub account
+2. **Visit [share.streamlit.io](https://share.streamlit.io)**
+3. **Click "New app"** and connect your GitHub account
+4. **Select your forked repository** and set:
+   - Main file path: `app.py`
+   - Python version: 3.9+ (recommended)
+5. **Click "Deploy"** - the app will automatically install dependencies
+
+**🌐 Live Demo**: [View the deployed app](https://ml-trading-strategies.streamlit.app)
+
+### Option 2: Automated Local Setup
 
 ```bash
 # Make the setup script executable
@@ -47,7 +59,7 @@ chmod +x run_app.sh
 ./run_app.sh
 ```
 
-### Option 2: Manual Setup
+### Option 3: Manual Local Setup
 
 ```bash
 # Create virtual environment
@@ -59,6 +71,26 @@ pip install -r requirements.txt
 
 # Launch the application
 streamlit run app.py
+```
+
+## 🔧 Deployment Configuration
+
+The app is optimized for Streamlit Cloud deployment with:
+
+- **Configuration**: `.streamlit/config.toml` for production settings
+- **Dependencies**: `requirements.txt` with pinned versions for reproducibility
+- **System packages**: `packages.txt` for additional system dependencies
+- **Caching**: `@st.cache_data` decorators for optimal performance
+- **Error handling**: Comprehensive exception handling and user feedback
+
+### Environment Variables (Optional)
+
+For enhanced functionality, you can set these environment variables in Streamlit Cloud:
+
+```bash
+# Optional: Custom default settings
+DEFAULT_TICKER=AAPL
+DEFAULT_START_DATE=2020-01-01
 ```
 
 ## 📋 Requirements

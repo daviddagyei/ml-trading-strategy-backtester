@@ -6,9 +6,70 @@ import plotly.express as px
 from plotly.subplots import make_subplots
 from datetime import datetime, timedelta
 import warnings
+import sys
+import traceback
 warnings.filterwarnings("ignore")
 
-from strategies import StrategyFactory, Metrics
+# Check for required packages
+try:
+    from strategies import StrategyFactory, Metrics
+except ImportError as e:
+    st.error(f"Error importing strategies module: {e}")
+    st.stop()
+
+# Validate essential packages
+missing_packages = []
+try:
+    import yfinance
+except ImportError:
+    missing_packages.append("yfinance")
+
+try:
+    import sklearn
+except ImportError:
+    missing_packages.append("scikit-learn")
+
+try:
+    import ta
+except ImportError:
+    missing_packages.append("ta")
+
+if missing_packages:
+    st.error(f"Missing required packages: {', '.join(missing_packages)}")
+    st.error("Please install missing packages and restart the app.")
+    st.stop()
+
+# Streamlit Cache for data loading
+@st.cache_data(ttl=3600, show_spinner=True)
+def load_stock_data(ticker: str, start_date: str, end_date: str) -> pd.DataFrame:
+    """Load stock data with caching for better performance"""
+    try:
+        import yfinance as yf
+        data = yf.download(ticker, start=start_date, end=end_date, progress=False)
+        if data.empty:
+            st.error(f"No data found for ticker {ticker}")
+            return pd.DataFrame()
+        return data
+    except Exception as e:
+        st.error(f"Error loading data for {ticker}: {str(e)}")
+        return pd.DataFrame()
+
+@st.cache_data(ttl=1800)
+def run_cached_strategy(strategy_type: str, ticker: str, start_date: str, end_date: str, **params):
+    """Run strategy with caching to avoid re-computation"""
+    try:
+        data = load_stock_data(ticker, start_date, end_date)
+        if data.empty:
+            return None, None
+        
+        strategy = StrategyFactory.create_strategy(strategy_type, **params)
+        results = strategy.run_backtest(data)
+        metrics = strategy.calculate_metrics(results)
+        return results, metrics
+    except Exception as e:
+        st.error(f"Error running strategy: {str(e)}")
+        st.error(f"Details: {traceback.format_exc()}")
+        return None, None
 
 # Page configuration
 st.set_page_config(
@@ -245,6 +306,9 @@ def main():
         st.subheader("Market Data")
         ticker = st.text_input("Ticker Symbol", value="MSFT", help="Enter stock ticker (e.g., MSFT, AAPL, SPY)")
         
+        # Store ticker in session state for caching
+        st.session_state.ticker = ticker
+        
         # Date range
         col1, col2 = st.columns(2)
         with col1:
@@ -261,6 +325,10 @@ def main():
                 min_value=start_date + timedelta(days=365),
                 max_value=datetime.now()
             )
+        
+        # Store dates in session state for caching
+        st.session_state.start_date = start_date
+        st.session_state.end_date = end_date
         
         st.markdown("---")
         
@@ -306,32 +374,51 @@ def main():
     if run_backtest:
         with st.spinner("Running backtest... This may take a moment."):
             try:
-                # Create and run strategy
-                strategy = StrategyFactory.create_strategy(strategy_name, **strategy_params)
-                results = strategy.run_backtest()
+                # Get date range from sidebar
+                start_date = st.session_state.get('start_date', datetime.now() - timedelta(days=365*2))
+                end_date = st.session_state.get('end_date', datetime.now())
+                ticker = st.session_state.get('ticker', 'AAPL')
                 
-                # Store in session state
-                st.session_state.results = results
-                st.session_state.strategy = strategy
-                st.session_state.strategy_name = strategy_name
+                # Use cached strategy execution
+                results, strategy_metrics = run_cached_strategy(
+                    strategy_name, ticker, 
+                    start_date.strftime('%Y-%m-%d'), 
+                    end_date.strftime('%Y-%m-%d'),
+                    **strategy_params
+                )
                 
+                if results is not None:
+                    # Store in session state
+                    st.session_state.results = results
+                    st.session_state.strategy_metrics = strategy_metrics
+                    st.session_state.strategy_name = strategy_name
+                    st.session_state.ticker = ticker
+                    st.success("Backtest completed successfully!")
+                else:
+                    st.error("Failed to run backtest. Please check your parameters and try again.")
+                    return
+                    
             except Exception as e:
                 st.error(f"Error running backtest: {str(e)}")
+                if st.checkbox("Show detailed error information"):
+                    st.code(traceback.format_exc())
                 return
     
     # Display results if available
     if 'results' in st.session_state:
         results = st.session_state.results
-        strategy = st.session_state.strategy
+        strategy_metrics = st.session_state.get('strategy_metrics', {})
         strategy_name = st.session_state.strategy_name
+        ticker = st.session_state.get('ticker', 'AAPL')
 
         # --- ML availability check and user banner (MA Crossover only) ---
         if strategy_name == "MA Crossover":
             baseline_df = results.get("baseline") if isinstance(results.get("baseline"), pd.DataFrame) else None
             ml_prob_series = results.get("ml_probabilities") if results.get("ml_probabilities") is not None else None
 
-            ml_hold_days = getattr(strategy, "ml_hold_days", 10)
-            proba_threshold = getattr(strategy, "proba_threshold", 0.55)
+            # Use default values instead of getattr on strategy object
+            ml_hold_days = strategy_params.get("ml_hold_days", 10)
+            proba_threshold = strategy_params.get("proba_threshold", 0.55)
 
             events_count = 0
             if baseline_df is not None:
@@ -369,24 +456,28 @@ def main():
         # Performance metrics section
         st.subheader("Performance Metrics")
 
-        # Calculate metrics for all strategies
-        metrics_data = []
-        for name, df in results.items():
-            if isinstance(df, pd.DataFrame) and "equity" in df.columns:
-                metrics = strategy.compute_metrics(df)
-                metrics_data.append({
-                    "Strategy": name.replace('_', ' ').title(),
-                    "CAGR": format_metric(metrics.cagr, "cagr"),
-                    "Sharpe": format_metric(metrics.sharpe, "sharpe"),
-                    "Max DD": format_metric(metrics.max_dd, "max_dd"),
-                    "Total Return": format_metric(metrics.total_return, "total_return"),
-                    "Volatility": format_metric(metrics.realized_vol, "realized_vol"),
-                    "Trades": format_metric(metrics.trade_count, "trade_count")
-                })
+        # Use cached metrics instead of recomputing
+        if strategy_metrics:
+            metrics_data = []
+            for name, metrics in strategy_metrics.items():
+                if metrics:
+                    metrics_data.append({
+                        "Strategy": name.replace('_', ' ').title(),
+                        "CAGR": format_metric(metrics.cagr, "cagr"),
+                        "Sharpe": format_metric(metrics.sharpe, "sharpe"),
+                        "Max DD": format_metric(metrics.max_dd, "max_dd"),
+                        "Total Return": format_metric(metrics.total_return, "total_return"),
+                        "Volatility": format_metric(metrics.realized_vol, "realized_vol") if hasattr(metrics, 'realized_vol') else "N/A",
+                        "Trades": format_metric(metrics.trade_count, "trade_count") if hasattr(metrics, 'trade_count') else "N/A"
+                    })
 
-        if metrics_data:
-            metrics_df = pd.DataFrame(metrics_data)
-            st.dataframe(metrics_df, use_container_width=True)
+            if metrics_data:
+                metrics_df = pd.DataFrame(metrics_data)
+                st.dataframe(metrics_df, use_container_width=True)
+            else:
+                st.warning("No metrics available to display.")
+        else:
+            st.warning("No metrics computed. Please run a backtest first.")
 
         # --- Additional diagnostics from notebooks: win-rates, selection stats, forecast errors ---
         st.subheader("Model & Trade Diagnostics")

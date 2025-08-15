@@ -1,0 +1,11 @@
+# System packages required for the ML trading strategies app
+# These packages will be installed on Streamlit Cloud before installing Python packages
+
+# Required for scientific computing and plotting
+libgomp1
+
+# For potential future database connections
+# libpq-dev
+
+# For better performance with large datasets
+# libopenblas-dev
