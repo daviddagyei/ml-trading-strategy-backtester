@@ -2,9 +2,9 @@
 
 A comprehensive Streamlit application that implements sophisticated trading strategies using machine learning. This application combines two powerful strategies from Jupyter notebooks into an interactive dashboard with object-oriented programming design.
 
-## 🎯 Features
+##  Features
 
-### 📈 Trading Strategies
+###  Trading Strategies
 
 1. **Moving Average Crossover with ML Filter**
    - Classic MA crossover strategy with intelligent signal filtering
@@ -18,7 +18,7 @@ A comprehensive Streamlit application that implements sophisticated trading stra
    - Dynamic leverage adjustment with volatility targeting
    - Rolling rebalancing with transaction cost modeling
 
-### 🎛️ Interactive Features
+###  Interactive Features
 
 - **Real-time Parameter Adjustment**: Modify strategy parameters and see results instantly
 - **Multi-Strategy Comparison**: Run and compare different strategies side-by-side
@@ -26,7 +26,7 @@ A comprehensive Streamlit application that implements sophisticated trading stra
 - **Performance Analytics**: Detailed metrics including CAGR, Sharpe ratio, drawdowns
 - **Data Export**: Download results as CSV files for further analysis
 
-### 📊 Analytics Dashboard
+### Analytics Dashboard
 
 - Equity curves with hover details
 - Price charts with trading signals
@@ -35,7 +35,7 @@ A comprehensive Streamlit application that implements sophisticated trading stra
 - Returns distribution analysis
 - ML probability tracking
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Option 1: Deploy on Streamlit Cloud (Recommended)
 
@@ -107,7 +107,7 @@ DEFAULT_START_DATE=2020-01-01
   - arch (GARCH modeling)
   - matplotlib
 
-## 🏗️ Architecture
+##  Architecture
 
 The application follows object-oriented design principles with clean separation of concerns:
 
@@ -127,7 +127,7 @@ The application follows object-oriented design principles with clean separation 
 - **StrategyFactory**: Factory pattern for strategy creation
 - **Metrics**: Performance metrics data container
 
-## 📈 Strategy Details
+##  Strategy Details
 
 ### Moving Average Crossover Strategy
 
@@ -157,7 +157,7 @@ The application follows object-oriented design principles with clean separation 
 - Dynamic position sizing
 - Risk-based portfolio management
 
-## 🎮 Usage Guide
+##  Usage Guide
 
 1. **Select Strategy**: Choose between MA Crossover or Volatility Forecasting
 2. **Configure Parameters**: Adjust strategy parameters in the sidebar
@@ -166,7 +166,7 @@ The application follows object-oriented design principles with clean separation 
 5. **Analyze Results**: Review performance metrics and interactive charts
 6. **Export Data**: Download results for further analysis
 
-## 📊 Performance Metrics
+##  Performance Metrics
 
 The dashboard provides comprehensive performance analytics:
 
@@ -177,7 +177,7 @@ The dashboard provides comprehensive performance analytics:
 - **Volatility**: Annualized return volatility
 - **Trade Count**: Number of executed trades
 
-## 🔧 Customization
+##  Customization
 
 The modular design allows easy extension:
 
@@ -186,7 +186,7 @@ The modular design allows easy extension:
 3. **New Visualizations**: Add custom Plotly charts
 4. **Enhanced Analytics**: Implement additional performance metrics
 
-## 📝 Example Usage
+##  Example Usage
 
 ```python
 # Create strategy instance
@@ -208,7 +208,7 @@ baseline_equity = results["baseline"]["equity"]
 ml_equity = results["ml_filtered"]["equity"]
 ```
 
-## 🤝 Contributing
+##  Contributing
 
 Feel free to contribute by:
 - Adding new trading strategies
@@ -217,11 +217,11 @@ Feel free to contribute by:
 - Adding new data sources
 - Optimizing performance
 
-## ⚠️ Disclaimer
+##  Disclaimer
 
 This application is for educational and research purposes only. Past performance does not guarantee future results. Always conduct thorough testing and risk assessment before implementing any trading strategy with real capital.
 
-## 📄 License
+##  License
 
 This project is provided as-is for educational purposes. Use at your own risk and ensure compliance with relevant financial regulations in your jurisdiction.
 
